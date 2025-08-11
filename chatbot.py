@@ -96,11 +96,11 @@ AUTH = TwitchAuth(
 YOUTUBE_API_KEY        = os.getenv("YOUTUBE_API_KEY")
 YOUTUBE_LIVE_CHAT_ID   = os.getenv("YOUTUBE_LIVE_CHAT_ID")     # "AUTO" => finn selv
 YOUTUBE_CHANNEL_ID     = os.getenv("YOUTUBE_CHANNEL_ID")       # valgfri (UC...)
-YOUTUBE_CHANNEL_HANDLE = os.getenv("YOUTUBE_CHANNEL_HANDLE")   # f.eks. @caxyhh
+YOUTUBE_CHANNEL_HANDLE = os.getenv("YOUTUBE_CHANNEL_HANDLE")   # f.eks. @kimsec
 YOUTUBE_VIDEO_ID       = os.getenv("YOUTUBE_VIDEO_ID")         # valgfri for test/unlisted
 
 # ====== KICK ======
-KICK_CHANNEL = os.getenv("KICK_CHANNEL") or "caxyhh"
+KICK_CHANNEL           = os.getenv("KICK_CHANNEL")
 
 # ====== Toggles / Prefiks ======
 def _env_bool(name: str, default: bool) -> bool:
