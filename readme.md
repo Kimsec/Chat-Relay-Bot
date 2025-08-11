@@ -1,5 +1,14 @@
-# Chat Relay Bot (Kick + YouTube → Twitch)
+<p align="center" width="10%">
+    <img width="20%" src="logo.png"></a>
+</p>
 
+# <p align="center">Chat Relay Bot<br>(Kick + YouTube → Twitch)</p>
+
+<br><p align="center" width="100%">
+<a href="https://www.buymeacoffee.com/kimsec">
+<img src="https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&amp;emoji=%E2%98%95&amp;slug=kimsec&amp;button_colour=FFDD00&amp;font_colour=000000&amp;font_family=Inter&amp;outline_colour=000000&amp;coffee_colour=ffffff" alt="Buy Me A Coffee"></a></p>
+
+## Description
 A small asynchronous relay that **reads chat messages from Kick and YouTube** and **posts them into a Twitch chat** via the official Helix `chat/messages` endpoint.  
 This repo contains the bot itself and a minimal OAuth helper to obtain and refresh Twitch tokens.
 
