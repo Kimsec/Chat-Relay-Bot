@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.so
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+env/
+chatbot/           # hvis venv-en din heter "chatbot"
+.python-version
+.pytest_cache/
+
+# Editor/OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Logs & tmp
+*.log
+logs/
+tmp/
+*.tmp
+
+# Secrets / local config
+.env
+twitch_tokens.json
+
+# Coverage
+.coverage
+coverage.xml
+htmlcov/
+guide.txt

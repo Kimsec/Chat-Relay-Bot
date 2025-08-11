@@ -1,0 +1,6 @@
+python-dotenv
+aiohttp
+websockets
+curl_cffi
+httpx
+kickpython
