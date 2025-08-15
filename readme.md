@@ -32,6 +32,7 @@ This repo contains the bot itself and a minimal OAuth helper to obtain and refre
 - ✅ Optional prefixes (e.g., `🟢[KICK] `, `🔴[YT] `) so you can tell sources apart.
 - ✅ Works fine under **systemd** for 24/7 operation.
 - ✅ OAuth helper (`auth_server.py`) to securely obtain tokens.
+- ✅ Pluggable moderation: word/phrase list (`banned_words.txt`) with hot‑reload (mtime watcher) and whole‑word regex matching (no partial censoring inside larger words).
 
 ---
 
@@ -101,6 +102,68 @@ cp .env.example .env
 - `ENABLE_YT` / `ENABLE_KICK` – `true` / `false` toggles.
 - `KICK_CHANNEL` – Kick username.
 - `YT_MIN_POLL_MS` – minimum wait between YouTube chat polls (e.g., `15000` = 15s).
+
+### Moderation (banned words / phrases)
+Add a plain text file (recommended name: `banned_words.txt`) and point the bot to it with:
+
+```
+BANNED_WORDS_FILE=banned_words.txt
+```
+
+Each non‑empty line = one word or multi‑word phrase to match. Lines starting with `#` are treated as comments and ignored. The bot builds a single compiled regex where every entry is wrapped in `\b` word boundaries:
+
+```
+\bWORD_OR_PHRASE\b
+```
+
+This means you don’t accidentally censor substrings inside longer words (e.g. `ass` won’t match `pass`, `cat` won’t match `educate`). Multi‑word phrases still work; the boundary applies only at the start of the first word and end of the last word. Matching is case‑insensitive by default.
+
+Variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `BANNED_WORDS_FILE` | (unset) | Path to the word/phrase list file. If unset, watcher is skipped. |
+| `BAN_MODE` | `censor` | `censor` = replace each hit with repeat of `BAN_CHAR`; `drop` = skip the entire message. |
+| `BAN_CHAR` | `*` | Replacement character when censoring. Repeated for the full length of the matched word/phrase. |
+| `BAN_CASE_SENSITIVE` | `false` | Set to `true` / `1` / `yes` to make matches case‑sensitive. |
+| `BAN_WATCH_INTERVAL` | `600` | Seconds between modification‑time checks of the list file (hot‑reload). Set lower (e.g. `5`) for faster reloads. |
+
+Hot‑reload mechanism:
+The tiny watcher coroutine simply checks the file’s modification time (`stat().st_mtime`) every `BAN_WATCH_INTERVAL` seconds. If it changed, it re‑reads and recompiles the regex—no extra dependencies (no inotify, watchdog, etc.). If the file is removed, the banned list is cleared until it reappears.
+
+Edge cases / notes:
+* Blank lines and comment lines are ignored during matching (but preserved if you manage the file manually).
+* Because of `\b` boundaries, punctuation immediately after a word (e.g. `word!`) still counts (word boundary is between the last alphanumeric and the punctuation).
+* To match something that is not word‑character delimited (e.g. an emoji sequence or symbols), you can surround it with spaces in the file, or add a variant without relying on boundaries (future enhancement: optional raw regex mode if needed).
+* Long lists: A few hundred entries are fine; they compile once per change. If you go into thousands, consider benchmarking startup.
+
+Example `banned_words.txt` snippet:
+```
+# Sexual content
+anal
+blow job
+# Threats
+kill yourself
+# Spam
+free crypto giveaway
+```
+
+Switching modes:
+```
+BAN_MODE=drop            # silently ignore whole messages containing a banned phrase
+BAN_MODE=censor          # (default) replace each matched word/phrase with *****
+BAN_CHAR=#               # use # instead of *
+BAN_WATCH_INTERVAL=30    # check for file updates every 30s
+```
+
+Disable moderation: simply unset / remove `BANNED_WORDS_FILE` (the watcher prints a notice and exits).
+
+Maintenance helpers:
+Use the included script to clean and sort your list:
+```
+python check_duplicate_lines.py banned_words.txt --fix
+```
+`--fix` = dedupe (case‑insensitive, trimmed), sort A→Z, and write back (creates a one‑time `.bak` backup).
 
 ### OAuth helper (auth_server.py)
 - `AUTH_BIND_HOST` – usually `127.0.0.1` in production.
@@ -177,6 +240,7 @@ journalctl -u chatbot.service -f
 - **Kick → Twitch:** Uses `kickpython` to read chat; forwards each message to Twitch (1 msg/sec to respect limits).
 - **YouTube → Twitch:** Resolves the active live chat (`activeLiveChatId`) and polls `liveChatMessages.list`; forwards messages to Twitch.
 - **Twitch posting:** Uses Helix `POST /helix/chat/messages` with your bot user token. Messages are trimmed to **500 chars** and rate‑limited to **1 msg/sec** per channel.
+- **Moderation flow:** Incoming message → regex whole‑word scan → if any match: either censored (character repeat per span) or dropped entirely based on `BAN_MODE`.
 
 > For YouTube: public live discovery uses `search.list` (quota‑heavy). For **unlisted/private testing**, set `YOUTUBE_VIDEO_ID` to skip the search and resolve the chat directly.
 
