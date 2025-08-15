@@ -34,3 +34,4 @@ twitch_tokens.json
 coverage.xml
 htmlcov/
 guide.txt
+*.bak
